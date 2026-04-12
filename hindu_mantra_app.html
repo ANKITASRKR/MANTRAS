@@ -1,0 +1,489 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .app { min-height: 100vh; background: var(--color-background-primary); }
+
+  .header {
+    background: linear-gradient(135deg, #8B1A1A 0%, #C0392B 40%, #E67E22 100%);
+    padding: 1.5rem 1rem 1rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
+  }
+  .om-symbol { font-size: 2.5rem; color: #FFD700; line-height: 1; position: relative; }
+  .app-title { font-size: 1.3rem; font-weight: 500; color: #fff; margin: 0.3rem 0 0.15rem; position: relative; }
+  .app-subtitle { font-size: 0.78rem; color: rgba(255,255,255,0.8); position: relative; }
+  .lang-tag-row { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 0.6rem; position: relative; }
+  .lang-tag { background: rgba(255,215,0,0.25); color: #FFD700; font-size: 0.6rem; padding: 2px 7px; border-radius: 20px; border: 0.5px solid rgba(255,215,0,0.4); }
+
+  .search-bar { padding: 0.75rem 1rem 0; }
+  .search-bar input {
+    width: 100%; padding: 0.55rem 1rem; border-radius: var(--border-radius-lg);
+    border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary);
+    font-size: 0.85rem; color: var(--color-text-primary); outline: none;
+  }
+  .search-bar input:focus { border-color: #C0392B; }
+
+  .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 0.7rem 1rem 0.4rem; scrollbar-width: none; }
+  .cat-scroll::-webkit-scrollbar { display: none; }
+  .cat-btn {
+    flex-shrink: 0; padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.75rem;
+    border: 0.5px solid var(--color-border-secondary); cursor: pointer;
+    background: var(--color-background-secondary); color: var(--color-text-secondary); transition: all 0.2s;
+  }
+  .cat-btn.active { background: #8B1A1A; color: #FFD700; border-color: #8B1A1A; }
+
+  .mantra-list { padding: 0.5rem 1rem 1rem; display: flex; flex-direction: column; gap: 12px; }
+
+  .mantra-card {
+    background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg); overflow: hidden;
+    border-left: 3px solid #C0392B;
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem; cursor: pointer; background: var(--color-background-secondary);
+  }
+  .card-header:hover { background: var(--color-background-tertiary); }
+  .card-title-block { display: flex; align-items: center; gap: 8px; }
+  .deity-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .card-name { font-size: 0.88rem; font-weight: 500; color: var(--color-text-primary); }
+  .card-type { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 1px; }
+  .expand-icon { color: var(--color-text-secondary); font-size: 0.7rem; transition: transform 0.2s; }
+  .expand-icon.open { transform: rotate(180deg); }
+
+  .card-body { display: none; padding: 1rem; border-top: 0.5px solid var(--color-border-tertiary); }
+  .card-body.show { display: block; }
+
+  .mantra-text {
+    font-family: serif; font-size: 1rem; color: #8B1A1A; line-height: 1.8;
+    text-align: center; margin-bottom: 0.75rem; padding: 0.75rem;
+    background: rgba(139,26,26,0.05); border-radius: var(--border-radius-md);
+    border: 0.5px solid rgba(139,26,26,0.15);
+  }
+  .meaning-block { font-size: 0.78rem; color: var(--color-text-secondary); margin-bottom: 0.75rem; line-height: 1.6; }
+  .meaning-block strong { color: var(--color-text-primary); font-weight: 500; }
+
+  .lang-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0.6rem; }
+  .lang-tab {
+    padding: 0.2rem 0.6rem; font-size: 0.65rem; border-radius: 20px; cursor: pointer;
+    border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary);
+    background: var(--color-background-secondary); transition: all 0.15s;
+  }
+  .lang-tab.active { background: #8B1A1A; color: #FFD700; border-color: #8B1A1A; }
+
+  .lang-content { display: none; }
+  .lang-content.show { display: block; }
+  .lang-text {
+    font-size: 0.88rem; line-height: 1.8; color: var(--color-text-primary);
+    padding: 0.6rem 0.75rem; background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md); margin-bottom: 0.4rem;
+  }
+  .lang-label { font-size: 0.65rem; color: var(--color-text-secondary); margin-top: 0.25rem; }
+
+  .benefits-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 0.75rem; }
+  .benefit-pill {
+    font-size: 0.65rem; padding: 2px 8px; border-radius: 20px;
+    background: rgba(230,126,34,0.12); color: #7D5A0E; border: 0.5px solid rgba(230,126,34,0.3);
+  }
+
+  .audio-row { display: flex; gap: 8px; margin-top: 0.75rem; align-items: center; }
+  .play-btn {
+    padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.72rem; cursor: pointer;
+    background: #8B1A1A; color: #FFD700; border: none; font-family: var(--font-sans);
+  }
+  .count-badge {
+    font-size: 0.65rem; color: var(--color-text-secondary);
+    padding: 2px 8px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary);
+  }
+
+  .empty-state { text-align: center; padding: 2rem; color: var(--color-text-secondary); font-size: 0.85rem; }
+  .divider { height: 0.5px; background: var(--color-border-tertiary); margin: 0.6rem 0; }
+
+  .footer { text-align: center; padding: 0.75rem; font-size: 0.68rem; color: var(--color-text-secondary); border-top: 0.5px solid var(--color-border-tertiary); }
+</style>
+
+<div class="app">
+  <div class="header">
+    <div class="om-symbol">ॐ</div>
+    <div class="app-title">Hindu Mantra Sangrah</div>
+    <div class="app-subtitle">Sacred Verses • Every Language • Every Deity</div>
+    <div class="lang-tag-row">
+      <span class="lang-tag">Sanskrit</span>
+      <span class="lang-tag">Hindi</span>
+      <span class="lang-tag">English</span>
+      <span class="lang-tag">Tamil</span>
+      <span class="lang-tag">Telugu</span>
+      <span class="lang-tag">Bengali</span>
+      <span class="lang-tag">Kannada</span>
+      <span class="lang-tag">Malayalam</span>
+      <span class="lang-tag">Gujarati</span>
+      <span class="lang-tag">Marathi</span>
+      <span class="lang-tag">Odia</span>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search mantras, deities, or keywords..." oninput="renderMantras()" />
+  </div>
+
+  <div class="cat-scroll" id="catScroll"></div>
+  <div class="mantra-list" id="mantraList"></div>
+  <div class="footer">ॐ सर्वे भवन्तु सुखिनः — May all beings be happy</div>
+</div>
+
+<script>
+const CATEGORIES = ["All","Ganesh","Shiva","Vishnu","Lakshmi","Durga","Saraswati","Ram","Krishna","Hanuman","Surya","Gayatri","Vedic"];
+
+const MANTRAS = [
+  {
+    id:1, deity:"Ganesh", icon:"🐘", iconBg:"#FF9800", type:"Mool Mantra",
+    name:"Ganesh Mool Mantra",
+    sanskrit:"ॐ गं गणपतये नमः",
+    meaning:"I bow to Lord Ganesha, the remover of all obstacles and the lord of all beginnings.",
+    benefits:["Removes obstacles","New beginnings","Success","Wisdom"],
+    langs:{
+      "English": { text:"Om Gam Ganapataye Namaha", note:"Phonetic transliteration — chant 108 times" },
+      "Hindi": { text:"ॐ गं गणपतये नमः — हे विघ्नहर्ता गणेश, मैं आपको नमन करता हूँ।", note:"हिंदी उच्चारण" },
+      "Tamil": { text:"ஓம் கம் கணபதயே நமஹ", note:"தமிழ் உச்சரிப்பு" },
+      "Telugu": { text:"ఓం గం గణపతయే నమః", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম গম গণপতয়ে নমঃ", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಗಂ ಗಣಪತಯೇ ನಮಃ", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ഗം ഗണപതയേ നമഃ", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ ગં ગણપતયે નમઃ", note:"ગુજરાતી ઉચ્ચારણ" },
+      "Marathi": { text:"ॐ गं गणपतये नमः", note:"मराठी उच्चारण" },
+      "Odia": { text:"ଓଂ ଗଂ ଗଣପତଯେ ନମଃ", note:"ଓଡ଼ିଆ ଉଚ୍ଚାରଣ" },
+      "Punjabi": { text:"ਓਮ ਗੰ ਗਣਪਤਯੇ ਨਮਃ", note:"ਪੰਜਾਬੀ ਉਚਾਰਨ" }
+    }
+  },
+  {
+    id:2, deity:"Gayatri", icon:"☀", iconBg:"#FF6B35", type:"Maha Mantra",
+    name:"Gayatri Mantra",
+    sanskrit:"ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात्",
+    meaning:"We meditate upon the glorious light of the Sun God. May He illuminate our intellect and inspire us.",
+    benefits:["Divine light","Wisdom","Purification","Spiritual growth"],
+    langs:{
+      "English": { text:"Om Bhur Bhuva Swaha, Tat Savitur Varenyam, Bhargo Devasya Dhimahi, Dhiyo Yo Nah Prachodayat", note:"Most sacred Vedic mantra — chant at sunrise" },
+      "Hindi": { text:"ॐ भूर्भुवः स्वः | उस प्राण स्वरूप, दुख नाशक, सुखस्वरूप, श्रेष्ठ, तेजस्वी, पापनाशक, देवस्वरूप परमात्मा को हम अपनी बुद्धि में धारण करें।", note:"हिंदी अर्थ सहित" },
+      "Tamil": { text:"ஓம் பூர் புவஸ் ஸ்வஹ தத் சவிதுர் வரேண்யம் பர்கோ தேவஸ்ய தீமஹி தியோ யோ நஹ ப்ரசோதயாத்", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం భూర్భువస్వః తత్సవితుర్వరేణ్యం భర్గో దేవస్య ధీమహి ధియో యో నః ప్రచోదయాత్", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম ভূর্ভুবঃ স্বঃ তৎসবিতুর্বরেণ্যং ভর্গো দেবস্য ধীমহি ধিয়ো যো নঃ প্রচোদয়াৎ", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಭೂರ್ಭುವಃ ಸ್ವಃ ತತ್ಸವಿತುರ್ವರೇಣ್ಯಂ ಭರ್ಗೋ ದೇವಸ್ಯ ಧೀಮಹಿ ಧಿಯೋ ಯೋ ನಃ ಪ್ರಚೋದಯಾತ್", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ഭൂർഭുവഃ സ്വഃ തത്സവിതുർ വരേണ്യം ഭർഗോ ദേവസ്യ ധീമഹി ധിയോ യോ നഃ പ്രചോദയാത്", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ ભૂર્ભુવઃ સ્વઃ તત્સવિતુર્વરેણ્યં ભર્ગો દેવસ્ય ધીમહિ ધિયો યો નઃ પ્રચોદયાત", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात्", note:"मराठी उच्चारण" },
+      "Odia": { text:"ଓଁ ଭୂର୍ଭୁବଃ ସ୍ୱଃ ତତ୍ ସବିତୁର୍ବରେଣ୍ୟଂ ଭର୍ଗୋ ଦେବସ୍ୟ ଧୀମହି ଧିୟୋ ୟୋ ନଃ ପ୍ରଚୋଦୟାତ୍", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਭੂਰ ਭੁਵਾਹ ਸਵਾਹਾ ਤਤ ਸਵਿਤੁਰ ਵਰੇਣਿਅਮ ਭਰਗੋ ਦੇਵਸਿਆ ਧੀਮਹੀ ਧੀਓ ਯੋ ਨਹ ਪ੍ਰਚੋਦਯਾਤ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:3, deity:"Shiva", icon:"🔱", iconBg:"#5C6BC0", type:"Maha Mantra",
+    name:"Mahamrityunjaya Mantra",
+    sanskrit:"ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् उर्वारुकमिव बन्धनान् मृत्योर्मुक्षीय माऽमृतात्",
+    meaning:"We worship the three-eyed Lord Shiva, who nourishes and is fragrant. May he free us from death, like a cucumber from its vine, granting immortality.",
+    benefits:["Conquers fear of death","Healing","Protection","Liberation"],
+    langs:{
+      "English": { text:"Om Tryambakam Yajamahe Sugandhim Pushtivardhanam, Urvarukamiva Bandhanat Mrityormukshiya Maamritat", note:"Also called Mrita-Sanjivani — chant for healing" },
+      "Hindi": { text:"ॐ त्र्यम्बकं यजामहे — हम तीन नेत्रों वाले भगवान शिव की उपासना करते हैं। वे सुगंधित हैं और हमारा पोषण करते हैं। जिस प्रकार ककड़ी बेल से अलग होती है, उसी प्रकार हम मृत्यु के बंधन से मुक्त हों।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஓம் த்ரயம்பகம் யஜாமஹே சுகந்திம் புஷ்டிவர்தனம், உர்வாருகமிவ பந்தனான் ம்ருத்யோர்முக்ஷீய மாம்ருதாத்", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనం ఉర్వారుకమివ బంధనాన్ మృత్యోర్ముక్షీయ మామృతాత్", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম ত্র্যম্বকং যজামহে সুগন্ধিং পুষ্টিবর্ধনম্ উর্বারুকমিব বন্ধনান্ মৃত্যোর্মুক্ষীয় মামৃতাৎ", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ತ್ರ್ಯಂಬಕಂ ಯಜಾಮಹೇ ಸುಗಂಧಿಂ ಪುಷ್ಟಿವರ್ಧನಂ ಉರ್ವಾರುಕಮಿವ ಬಂಧನಾನ್ ಮೃತ್ಯೋರ್ಮುಕ್ಷೀಯ ಮಾಮೃತಾತ್", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ത്ര്യംബകം യജാമഹേ സുഗന്ധിം പുഷ്ടിവർദ്ധനം ഉർവ്വാരുകമിവ ബന്ധനാൻ മൃത്യോർ മുക്ഷീയ മാമൃതാത്", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ ત્ર્યમ્બકં યજામહે સુગન્ધિં પુષ્ટિવર્ધનમ્ ઉર્વારુકમિવ બન્ધનાન્ મૃત્યોર્મુક્ષીય માઽમૃતાત્", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ त्र्यंबकं यजामहे सुगंधिं पुष्टिवर्धनम् उर्वारुकमिव बंधनान्मृत्योर्मुक्षीय मामृतात्", note:"मराठी उच्चारण" },
+      "Odia": { text:"ଓଁ ତ୍ର୍ୟମ୍ବକଂ ଯଜାମହେ ସୁଗନ୍ଧିଂ ପୁଷ୍ଟିବର୍ଦ୍ଧନଂ ଉର୍ବ୍ବାରୁକମିବ ବନ୍ଧନାନ୍ ମୃତ୍ୟୋର୍ ମୁକ୍ଷୀୟ ମାମୃତାତ୍", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਤ੍ਰਿਅੰਬਕਮ ਯਜਾਮਹੇ ਸੁਗੰਧਿਮ ਪੁਸ਼ਟਿਵਰਧਨਮ ਉਰਵਾਰੁਕਮਿਵ ਬੰਧਨਾਨ ਮ੍ਰਿਤਯੋਰਮੁਕਸ਼ੀਯ ਮਾਮ੍ਰਿਤਾਤ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:4, deity:"Vishnu", icon:"🪷", iconBg:"#1565C0", type:"Mool Mantra",
+    name:"Vishnu Mool Mantra",
+    sanskrit:"ॐ नमो भगवते वासुदेवाय",
+    meaning:"I bow to Lord Vasudeva (Krishna/Vishnu), the Supreme Being who dwells in all.",
+    benefits:["Protection","Preservation","Peace","Prosperity"],
+    langs:{
+      "English": { text:"Om Namo Bhagavate Vasudevaya", note:"Dwadasakshari — the 12-syllable mantra, chant 108 times" },
+      "Hindi": { text:"ॐ नमो भगवते वासुदेवाय — हे भगवान वासुदेव, मैं आपको नमन करता हूँ।", note:"हिंदी उच्चारण" },
+      "Tamil": { text:"ஓம் நமோ பகவதே வாசுதேவாய", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం నమో భగవతే వాసుదేవాయ", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম নমো ভগবতে বাসুদেবায়", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ನಮೋ ಭಗವತೇ ವಾಸುದೇವಾಯ", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം നമോ ഭഗവതേ വാസുദേവായ", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ નમો ભગવતે વાસુદેવાય", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ नमो भगवते वासुदेवाय", note:"मराठी" },
+      "Odia": { text:"ଓଁ ନମୋ ଭଗବତେ ବାସୁଦେବାୟ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਨਮੋ ਭਗਵਤੇ ਵਾਸੁਦੇਵਾਯ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:5, deity:"Lakshmi", icon:"🌸", iconBg:"#E91E63", type:"Mool Mantra",
+    name:"Lakshmi Mool Mantra",
+    sanskrit:"ॐ श्रीं ह्रीं श्रीं कमले कमलालये प्रसीद प्रसीद ॐ श्रीं ह्रीं श्रीं महालक्ष्म्यै नमः",
+    meaning:"O Goddess Lakshmi, who resides in the lotus, please be gracious. I bow to the great Lakshmi.",
+    benefits:["Wealth","Abundance","Fortune","Beauty"],
+    langs:{
+      "English": { text:"Om Shreem Hreem Shreem Kamale Kamalalaye Praseed Praseed Om Shreem Hreem Shreem Mahalakshmyai Namah", note:"Chant on Fridays for abundance" },
+      "Hindi": { text:"ॐ श्रीं ह्रीं श्रीं — हे कमल में निवास करने वाली महालक्ष्मी, कृपया प्रसन्न हों, आपको नमस्कार।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஓம் ஸ்ரீம் ஹ்ரீம் ஸ்ரீம் கமலே கமலலாயே ப்ரஸீத ப்ரஸீத மஹாலக்ஷ்ம்யை நமஹ", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం శ్రీం హ్రీం శ్రీం కమలే కమలాలయే ప్రసీద ప్రసీద మహాలక్ష్మ్యై నమః", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম শ্রীং হ্রীং শ্রীং কমলে কমললায়ে প্রসীদ প্রসীদ মহালক্ষ্ম্যৈ নমঃ", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಶ್ರೀಂ ಹ್ರೀಂ ಶ್ರೀಂ ಕಮಲೇ ಕಮಲಾಲಯೇ ಪ್ರಸೀದ ಪ್ರಸೀದ ಮಹಾಲಕ್ಷ್ಮ್ಯೈ ನಮಃ", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ശ്രീം ഹ്രീം ശ്രീം കമലേ കമലലായേ പ്രസീദ പ്രസീദ മഹാലക്ഷ്മ്യൈ നമഃ", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ શ્રીં હ્રીં શ્રીં કમલે કમલાલયે પ્રસીદ પ્રસીદ મહાલક્ષ્મ્યૈ નમઃ", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ श्रीं ह्रीं श्रीं कमले कमललाये प्रसीद प्रसीद महालक्ष्म्यै नमः", note:"मराठी" },
+      "Odia": { text:"ଓଁ ଶ୍ରୀଂ ହ୍ରୀଂ ଶ୍ରୀଂ କମଲେ କମଲାଳୟେ ପ୍ରସୀଦ ପ୍ରସୀଦ ମହାଲକ୍ଷ୍ମ୍ୟୈ ନମଃ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਸ਼੍ਰੀਮ ਹ੍ਰੀਮ ਸ਼੍ਰੀਮ ਕਮਲੇ ਕਮਲਾਲਏ ਪ੍ਰਸੀਦ ਪ੍ਰਸੀਦ ਮਹਾਲਕਸ਼ਮੀਏ ਨਮਃ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:6, deity:"Durga", icon:"⚔", iconBg:"#B71C1C", type:"Mool Mantra",
+    name:"Durga Mool Mantra",
+    sanskrit:"ॐ दुं दुर्गायै नमः",
+    meaning:"I bow to Goddess Durga, the invincible and supreme protector who destroys evil.",
+    benefits:["Protection","Courage","Victory","Destroys evil"],
+    langs:{
+      "English": { text:"Om Dum Durgayai Namaha", note:"Chant during Navratri or for protection" },
+      "Hindi": { text:"ॐ दुं दुर्गायै नमः — हे माँ दुर्गा, मैं आपको नमस्कार करता हूँ। आप अजेय हैं।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஓம் டும் துர்காயை நமஹ", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం దుం దుర్గాయై నమః", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম দুং দুর্গায়ৈ নমঃ", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ದುಂ ದುರ್ಗಾಯೈ ನಮಃ", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ദും ദുർഗ്ഗായൈ നമഃ", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ દું દુર્ગાયૈ નમઃ", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ दुं दुर्गायै नमः", note:"मराठी" },
+      "Odia": { text:"ଓଁ ଦୁଂ ଦୁର୍ଗ୍ଗାୟୈ ନମଃ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਦੁਮ ਦੁਰਗਾਯੈ ਨਮਃ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:7, deity:"Saraswati", icon:"🎵", iconBg:"#0097A7", type:"Mool Mantra",
+    name:"Saraswati Vandana",
+    sanskrit:"ॐ ऐं सरस्वत्यै नमः",
+    meaning:"I bow to Goddess Saraswati, the goddess of knowledge, learning, arts, and wisdom.",
+    benefits:["Knowledge","Education","Arts","Creativity"],
+    langs:{
+      "English": { text:"Om Aim Saraswatyai Namaha", note:"Chant before studying or creative work" },
+      "Hindi": { text:"ॐ ऐं सरस्वत्यै नमः — हे विद्या की देवी सरस्वती, मैं आपको नमन करता हूँ।", note:"हिंदी उच्चारण" },
+      "Tamil": { text:"ஓம் ஐம் சரஸ்வத்யை நமஹ", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం ఐం సరస్వత్యై నమః", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম এইং সরস্বত্যৈ নমঃ", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಐಂ ಸರಸ್ವತ್ಯೈ ನಮಃ", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ഐം സരസ്വത്യൈ നമഃ", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ ઐં સરસ્વત્યૈ નમઃ", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ ऐं सरस्वत्यै नमः", note:"मराठी" },
+      "Odia": { text:"ଓଁ ଐଂ ସରସ୍ୱତ୍ୟୈ ନମଃ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਐਂ ਸਰਸਵਤਯੈ ਨਮਃ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:8, deity:"Krishna", icon:"🪈", iconBg:"#1A237E", type:"Maha Mantra",
+    name:"Hare Krishna Maha Mantra",
+    sanskrit:"हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे | हरे राम हरे राम राम राम हरे हरे ||",
+    meaning:"O Lord Hari (Krishna), O Lord Rama — I call upon you. Let me be absorbed in your divine names and be liberated.",
+    benefits:["Liberation","Joy","Devotion","Peace of mind"],
+    langs:{
+      "English": { text:"Hare Krishna Hare Krishna Krishna Krishna Hare Hare | Hare Rama Hare Rama Rama Rama Hare Hare", note:"The Maha Mantra — chant continuously for bhakti" },
+      "Hindi": { text:"हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे | हरे राम हरे राम राम राम हरे हरे — यह महामंत्र मोक्ष का द्वार है।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஹரே க்ருஷ்ண ஹரே க்ருஷ்ண க்ருஷ்ண க்ருஷ்ண ஹரே ஹரே | ஹரே ராம ஹரே ராம ராம ராம ஹரே ஹரே", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"హరే కృష్ణ హరే కృష్ణ కృష్ణ కృష్ణ హరే హరే | హరే రామ హరే రామ రామ రామ హరే హరే", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"হরে কৃষ্ণ হরে কৃষ্ণ কৃষ্ণ কৃষ্ণ হরে হরে | হরে রাম হরে রাম রাম রাম হরে হরে", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಹರೇ ಕೃಷ್ಣ ಹರೇ ಕೃಷ್ಣ ಕೃಷ್ಣ ಕೃಷ್ಣ ಹರೇ ಹರೇ | ಹರೇ ರಾಮ ಹರೇ ರಾಮ ರಾಮ ರಾಮ ಹರೇ ಹರೇ", note:"ಕನ್ನಡ" },
+      "Malayalam": { text:"ഹരേ കൃഷ്ണ ഹരേ കൃഷ്ണ കൃഷ്ണ കൃഷ്ണ ഹരേ ഹരേ | ഹരേ രാമ ഹരേ രാമ രാമ രാമ ഹരേ ഹരേ", note:"മലയാളം" },
+      "Gujarati": { text:"હરે કૃષ્ણ હરે કૃષ્ણ કૃષ્ણ કૃષ્ણ હરે હરે | હરે રામ હરે રામ રામ રામ હરે હરે", note:"ગુજરાતી" },
+      "Marathi": { text:"हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे | हरे राम हरे राम राम राम हरे हरे", note:"मराठी" },
+      "Odia": { text:"ହରେ କୃଷ୍ଣ ହରେ କୃଷ୍ଣ କୃଷ୍ଣ କୃଷ୍ଣ ହରେ ହରେ | ହରେ ରାମ ହରେ ରାମ ରାମ ରାମ ହରେ ହରେ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਹਰੇ ਕ੍ਰਿਸ਼ਨਾ ਹਰੇ ਕ੍ਰਿਸ਼ਨਾ ਕ੍ਰਿਸ਼ਨਾ ਕ੍ਰਿਸ਼ਨਾ ਹਰੇ ਹਰੇ | ਹਰੇ ਰਾਮਾ ਹਰੇ ਰਾਮਾ ਰਾਮਾ ਰਾਮਾ ਹਰੇ ਹਰੇ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:9, deity:"Hanuman", icon:"🙏", iconBg:"#E65100", type:"Mool Mantra",
+    name:"Hanuman Mool Mantra",
+    sanskrit:"ॐ हं हनुमते रुद्रात्मकाय हुं फट्",
+    meaning:"I invoke Hanuman, the embodiment of Rudra's power. Destroy all negativity and grant strength.",
+    benefits:["Strength","Devotion","Fearlessness","Victory over enemies"],
+    langs:{
+      "English": { text:"Om Ham Hanumate Rudratmakay Hum Phat", note:"Chant on Tuesdays and Saturdays for strength" },
+      "Hindi": { text:"ॐ हं हनुमते रुद्रात्मकाय हुं फट् — हे वीर हनुमान, हमें शक्ति और साहस दीजिए।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஓம் ஹம் ஹனுமதே ருத்ராத்மகாய ஹும் பட்", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం హం హనుమతే రుద్రాత్మకాయ హుం ఫట్", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম হং হনুমতে রুদ্রাত্মকায় হুং ফট্", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಹಂ ಹನುಮತೇ ರುದ್ರಾತ್ಮಕಾಯ ಹುಂ ಫಟ್", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ഹം ഹനുമതേ രുദ്രാത്മകായ ഹും ഫട്", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ હં હનુમતે રુદ્રાત્મકાય હુઁ ફટ્", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ हं हनुमते रुद्रात्मकाय हुं फट्", note:"मराठी" },
+      "Odia": { text:"ଓଁ ହଂ ହନୁମତେ ରୁଦ୍ରାତ୍ମକାୟ ହୁଂ ଫଟ୍", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਹਮ ਹਨੁਮਤੇ ਰੁਦਰਾਤਮਕਾਯ ਹੁਮ ਫਟ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:10, deity:"Ram", icon:"🏹", iconBg:"#2E7D32", type:"Taraka Mantra",
+    name:"Ram Naam — Taraka Mantra",
+    sanskrit:"ॐ श्री राम जय राम जय जय राम",
+    meaning:"Glory to Lord Rama! Victory to Rama! All victory to Rama, the embodiment of dharma and truth.",
+    benefits:["Dharma","Truth","Liberation","Inner peace"],
+    langs:{
+      "English": { text:"Om Shri Ram Jay Ram Jay Jay Ram", note:"Taraka Mantra — the ferry that helps cross the ocean of samsara" },
+      "Hindi": { text:"ॐ श्री राम जय राम जय जय राम — श्री राम की जय हो, उनके नाम में ही मुक्ति है।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஓம் ஸ்ரீ ராம் ஜய் ராம் ஜய் ஜய் ராம்", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం శ్రీ రామ్ జయ రామ్ జయ జయ రామ్", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম শ্রী রাম জয় রাম জয় জয় রাম", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಶ್ರೀ ರಾಮ್ ಜಯ ರಾಮ್ ಜಯ ಜಯ ರಾಮ್", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ശ്രീ രാം ജയ രാം ജയ ജയ രാം", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ શ્રી રામ જય રામ જય જય રામ", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ श्री राम जय राम जय जय राम", note:"मराठी" },
+      "Odia": { text:"ଓଁ ଶ୍ରୀ ରାମ ଜୟ ରାମ ଜୟ ଜୟ ରାମ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਸ਼੍ਰੀ ਰਾਮ ਜੈ ਰਾਮ ਜੈ ਜੈ ਰਾਮ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:11, deity:"Surya", icon:"☀", iconBg:"#F57F17", type:"Mool Mantra",
+    name:"Surya Mantra",
+    sanskrit:"ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः",
+    meaning:"I bow to the Sun God, the source of all life and light, the cosmic giver of energy.",
+    benefits:["Health","Vitality","Clarity","Positive energy"],
+    langs:{
+      "English": { text:"Om Hraam Hreem Hraum Sah Suryaya Namah", note:"Chant at sunrise facing the east" },
+      "Hindi": { text:"ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः — हे सूर्य देव, आपको नमस्कार। आप सभी के जीवनदाता हैं।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஓம் ஹ்ராம் ஹ்ரீம் ஹ்ரௌம் ஸஹ் சூர்யாய நமஹ", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం హ్రాం హ్రీం హ్రౌం సః సూర్యాయ నమః", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম হ্রাং হ্রীং হ্রৌং সঃ সূর্যায় নমঃ", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಹ್ರಾಂ ಹ್ರೀಂ ಹ್ರೌಂ ಸಃ ಸೂರ್ಯಾಯ ನಮಃ", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം ഹ്രാം ഹ്രീം ഹ്രൗം സഃ സൂര്യായ നമഃ", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ હ્રાં હ્રીં હ્રૌં સઃ સૂર્યાય નમઃ", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः", note:"मराठी" },
+      "Odia": { text:"ଓଁ ହ୍ରାଂ ହ୍ରୀଂ ହ୍ରୌଂ ସଃ ସୂର୍ଯ୍ୟାୟ ନମଃ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਹ੍ਰਾਂ ਹ੍ਰੀਂ ਹ੍ਰੌਂ ਸਃ ਸੂਰਯਾਯ ਨਮਃ", note:"ਪੰਜਾਬੀ" }
+    }
+  },
+  {
+    id:12, deity:"Vedic", icon:"📿", iconBg:"#4A148C", type:"Shanti Mantra",
+    name:"Shanti Mantra — Om Sarvesham",
+    sanskrit:"ॐ सर्वेशां स्वस्तिर्भवतु | सर्वेशां शान्तिर्भवतु | सर्वेशां पूर्णं भवतु | सर्वेशां मङ्गलं भवतु ||",
+    meaning:"May there be well-being for all. May there be peace for all. May there be completeness for all. May there be auspiciousness for all.",
+    benefits:["Universal peace","Well-being","Completeness","Harmony"],
+    langs:{
+      "English": { text:"Om Sarvesham Svastir Bhavatu | Sarvesham Shantir Bhavatu | Sarvesham Purnam Bhavatu | Sarvesham Mangalam Bhavatu ||", note:"Universal peace prayer from Upanishads" },
+      "Hindi": { text:"ॐ — सभी का कल्याण हो, सभी को शान्ति मिले, सभी की पूर्णता हो, सभी का मंगल हो।", note:"हिंदी भावार्थ" },
+      "Tamil": { text:"ஓம் சர்வேஷாம் ஸ்வஸ்திர்பவது | சர்வேஷாம் சாந்திர்பவது | சர்வேஷாம் பூர்ணம்பவது | சர்வேஷாம் மங்களம்பவது", note:"தமிழ் ஒலிபெயர்ப்பு" },
+      "Telugu": { text:"ఓం సర్వేషాం స్వస్తిర్భవతు | సర్వేషాం శాంతిర్భవతు | సర్వేషాం పూర్ణం భవతు | సర్వేషాం మంగళం భవతు", note:"తెలుగు ఉచ్చారణ" },
+      "Bengali": { text:"ওম সর্বেশাং স্বস্তির্ভবতু | সর্বেশাং শান্তির্ভবতু | সর্বেশাং পূর্ণং ভবতু | সর্বেশাং মঙ্গলং ভবতু", note:"বাংলা উচ্চারণ" },
+      "Kannada": { text:"ಓಂ ಸರ್ವೇಷಾಂ ಸ್ವಸ್ತಿರ್ಭವತು | ಸರ್ವೇಷಾಂ ಶಾಂತಿರ್ಭವತು | ಸರ್ವೇಷಾಂ ಪೂರ್ಣಂ ಭವತು | ಸರ್ವೇಷಾಂ ಮಂಗಳಂ ಭವತು", note:"ಕನ್ನಡ ಉಚ್ಚಾರಣೆ" },
+      "Malayalam": { text:"ഓം സർവേഷാം സ്വസ്തിർഭവതു | സർവേഷാം ശാന്തിർഭവതു | സർവേഷാം പൂർണ്ണം ഭവതു | സർവേഷാം മംഗളം ഭവതു", note:"മലയാള ഉച്ചാരണം" },
+      "Gujarati": { text:"ૐ સર્વેશાં સ્વસ્તિર્ભવતુ | સર્વેશાં શાન્તિર્ભવતુ | સર્વેશાં પૂર્ણં ભવતુ | સર્વેશાં મઙ્ગલં ભવતુ", note:"ગુજરાતી" },
+      "Marathi": { text:"ॐ सर्वेशां स्वस्तिर्भवतु | सर्वेशां शान्तिर्भवतु | सर्वेशां पूर्णं भवतु | सर्वेशां मंगलं भवतु", note:"मराठी" },
+      "Odia": { text:"ଓଁ ସର୍ବେଷାଂ ସ୍ୱସ୍ତିର୍ଭବତୁ | ସର୍ବେଷାଂ ଶାନ୍ତିର୍ଭବତୁ | ସର୍ବେଷାଂ ପୂର୍ଣଂ ଭବତୁ | ସର୍ବେଷାଂ ମଙ୍ଗଳଂ ଭବତୁ", note:"ଓଡ଼ିଆ" },
+      "Punjabi": { text:"ਓਮ ਸਰਵੇਸ਼ਾਂ ਸਵਸਤਿਰਭਵਤੁ | ਸਰਵੇਸ਼ਾਂ ਸ਼ਾਂਤਿਰਭਵਤੁ | ਸਰਵੇਸ਼ਾਂ ਪੂਰਣਮਭਵਤੁ | ਸਰਵੇਸ਼ਾਂ ਮੰਗਲਮਭਵਤੁ", note:"ਪੰਜਾਬੀ" }
+    }
+  }
+];
+
+let activeCategory = "All";
+let openCards = {};
+let activeLangs = {};
+
+function renderCategories() {
+  const c = document.getElementById("catScroll");
+  c.innerHTML = CATEGORIES.map(cat =>
+    `<button class="cat-btn ${cat === activeCategory ? 'active' : ''}" onclick="setCategory('${cat}')">${cat}</button>`
+  ).join('');
+}
+
+function setCategory(cat) {
+  activeCategory = cat;
+  renderCategories();
+  renderMantras();
+}
+
+function renderMantras() {
+  const query = document.getElementById("searchInput").value.toLowerCase();
+  const list = document.getElementById("mantraList");
+  const filtered = MANTRAS.filter(m => {
+    const matchCat = activeCategory === "All" || m.deity === activeCategory;
+    const matchSearch = !query || m.name.toLowerCase().includes(query) || m.deity.toLowerCase().includes(query) || m.meaning.toLowerCase().includes(query) || m.sanskrit.includes(query);
+    return matchCat && matchSearch;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">🙏 No mantras found. Try a different search or category.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(m => {
+    const isOpen = openCards[m.id];
+    const langs = Object.keys(m.langs);
+    const activeLang = activeLangs[m.id] || langs[0];
+    const langContent = m.langs[activeLang];
+    return `
+    <div class="mantra-card" id="card-${m.id}">
+      <div class="card-header" onclick="toggleCard(${m.id})">
+        <div class="card-title-block">
+          <div class="deity-icon" style="background:${m.iconBg}20; border: 1px solid ${m.iconBg}40; font-size:14px;">${m.icon}</div>
+          <div>
+            <div class="card-name">${m.name}</div>
+            <div class="card-type">${m.deity} • ${m.type}</div>
+          </div>
+        </div>
+        <span class="expand-icon ${isOpen ? 'open' : ''}">▼</span>
+      </div>
+      ${isOpen ? `
+      <div class="card-body show">
+        <div class="mantra-text">${m.sanskrit}</div>
+        <div class="meaning-block"><strong>Meaning:</strong> ${m.meaning}</div>
+        <div class="divider"></div>
+        <div style="font-size:0.72rem; color:var(--color-text-secondary); margin-bottom:0.4rem;">Select Language:</div>
+        <div class="lang-tabs">
+          ${langs.map(l => `<div class="lang-tab ${l === activeLang ? 'active' : ''}" onclick="setLang(${m.id}, '${l}')">${l}</div>`).join('')}
+        </div>
+        <div class="lang-content show">
+          <div class="lang-text">${langContent.text}</div>
+          <div class="lang-label">${langContent.note}</div>
+        </div>
+        <div class="benefits-row">
+          ${m.benefits.map(b => `<span class="benefit-pill">${b}</span>`).join('')}
+        </div>
+        <div class="audio-row">
+          <button class="play-btn" onclick="speakMantra(${m.id})">▶ Listen</button>
+          <span class="count-badge">108 repetitions</span>
+        </div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  openCards[id] = !openCards[id];
+  renderMantras();
+}
+
+function setLang(id, lang) {
+  activeLangs[id] = lang;
+  renderMantras();
+}
+
+function speakMantra(id) {
+  const m = MANTRAS.find(x => x.id === id);
+  if (!m) return;
+  const activeLang = activeLangs[id] || Object.keys(m.langs)[0];
+  const text = m.langs[activeLang].text;
+  const utter = new SpeechSynthesisUtterance(text);
+  const langMap = {
+    "English":"en-IN","Hindi":"hi-IN","Tamil":"ta-IN","Telugu":"te-IN",
+    "Bengali":"bn-IN","Kannada":"kn-IN","Malayalam":"ml-IN","Gujarati":"gu-IN",
+    "Marathi":"mr-IN","Odia":"or-IN","Punjabi":"pa-IN"
+  };
+  utter.lang = langMap[activeLang] || "hi-IN";
+  utter.rate = 0.75;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
+}
+
+renderCategories();
+renderMantras();
+</script>
